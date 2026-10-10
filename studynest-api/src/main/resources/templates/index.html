@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyNest - Study Center Seat Booking Portal</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .seat-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .seat-card:hover {
+            transform: translateY(-3px);
+        }
+        .badge-pulse {
+            animation: pulse-ring 2s infinite;
+        }
+        @keyframes pulse-ring {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+            50% { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col md:flex-row antialiased">
+
+    <!-- Left Sidebar Menu -->
+    <aside class="w-full md:w-72 bg-slate-900 border-r border-slate-800 flex flex-col justify-between shrink-0">
+        <div>
+            <!-- Center Branding -->
+            <div class="p-6 border-b border-slate-800/80">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-600/30">
+                        <i class="fa-solid fa-graduation-cap text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-base font-bold text-white tracking-tight">StudyNest</h1>
+                        <p class="text-xs text-slate-400">Academic Seat Portal</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active User Profile Card -->
+            <div class="p-4 mx-4 my-4 rounded-xl bg-slate-800/70 border border-slate-700/60">
+                <div class="flex items-center justify-between mb-2">
+                    <span id="sidebarUserRole" class="text-[11px] font-semibold tracking-wide uppercase px-2 py-0.5 rounded-full bg-indigo-950 text-indigo-300 border border-indigo-800">
+                        Student
+                    </span>
+                    <span id="sidebarUserIdCard" class="text-[11px] text-slate-400 font-mono">SN-1001</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-full bg-slate-700 flex items-center justify-center text-slate-300 font-semibold text-sm">
+                        <span id="sidebarUserAvatar">A</span>
+                    </div>
+                    <div class="overflow-hidden">
+                        <h4 id="sidebarUserName" class="text-sm font-semibold text-white truncate">Alex Johnson</h4>
+                        <p id="sidebarUserPhone" class="text-xs text-slate-400 truncate">+91 9876543210</p>
+                    </div>
+                </div>
+                <button onclick="openLoginModal()" class="w-full mt-3 text-xs font-medium py-1.5 px-3 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-right-left text-[11px]"></i> Switch / Login
+                </button>
+            </div>
+
+            <!-- Sidebar Navigation Links -->
+            <nav class="px-4 space-y-1.5">
+                <button onclick="switchView('map')" id="navMap" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition bg-indigo-600/15 text-indigo-400 border border-indigo-500/20">
+                    <i class="fa-solid fa-layer-group text-sm w-4"></i>
+                    <span>Seat Floor Plan</span>
+                </button>
+
+                <button onclick="openMyReservationsModal()" id="navReservations" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition text-slate-300 hover:bg-slate-800 hover:text-white">
+                    <i class="fa-solid fa-calendar-check text-sm w-4"></i>
+                    <span>My Reservations</span>
+                </button>
+
+                <button onclick="openAdminConsoleModal()" id="navAdmin" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition text-slate-300 hover:bg-slate-800 hover:text-white">
+                    <i class="fa-solid fa-shield-halved text-sm w-4"></i>
+                    <span>Admin Console</span>
+                    <span id="adminBadgeNotice" class="ml-auto text-[10px] font-semibold px-1.5 py-0.2 rounded bg-amber-950 text-amber-300 border border-amber-800">Admin</span>
+                </button>
+
+                <button onclick="openCenterInfoModal()" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition text-slate-300 hover:bg-slate-800 hover:text-white">
+                    <i class="fa-solid fa-circle-info text-sm w-4"></i>
+                    <span>Center Guidelines</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- Sidebar Footer -->
+        <div class="p-4 border-t border-slate-800 text-xs text-slate-500 flex flex-col gap-1">
+            <div class="flex items-center gap-2 text-slate-400 font-medium">
+                <i class="fa-solid fa-database text-indigo-400"></i>
+                <span>Database: Persistent Storage</span>
+            </div>
+            <p class="text-[11px]">System Status: Operational</p>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+
+        <!-- Top Header Bar -->
+        <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 px-6 py-4 flex flex-wrap justify-between items-center gap-4 sticky top-0 z-30">
+            <div>
+                <h2 class="text-lg font-bold text-white tracking-tight">Study Center Floor Plan</h2>
+                <p class="text-xs text-slate-400">Real-time seat availability and reservation management</p>
+            </div>
+
+            <!-- Header Quick Stats -->
+            <div class="flex items-center gap-3 text-xs">
+                <div class="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700/60">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                    <span class="text-slate-300">Available: <strong id="statAvailable" class="text-white">0</strong></span>
+                </div>
+                <div class="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700/60">
+                    <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                    <span class="text-slate-300">Occupied: <strong id="statOccupied" class="text-white">0</strong></span>
+                </div>
+                <div class="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700/60">
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500 badge-pulse"></span>
+                    <span class="text-slate-300">Pending Check-In: <strong id="statPending" class="text-white">0</strong></span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Body Content -->
+        <div class="p-6 space-y-6 max-w-7xl w-full">
+
+            <!-- Slot Selection Controls -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Date Picker (Up to 7 days advance) -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+                            <i class="fa-regular fa-calendar text-indigo-400 mr-1"></i> Date (Max 7 Days)
+                        </label>
+                        <input type="date" id="bookingDate" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+
+                    <!-- Start Time -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+                            <i class="fa-regular fa-clock text-indigo-400 mr-1"></i> Session Start
+                        </label>
+                        <input type="time" id="startTime" value="14:00" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+
+                    <!-- End Time -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+                            <i class="fa-regular fa-clock text-indigo-400 mr-1"></i> Session End
+                        </label>
+                        <input type="time" id="endTime" value="17:00" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+
+                    <!-- Refresh Button -->
+                    <div class="flex items-end">
+                        <button onclick="loadSeatMap()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2 px-4 rounded-xl shadow-md transition duration-200 flex items-center justify-center gap-2 text-sm">
+                            <i class="fa-solid fa-rotate-right"></i> Check Availability
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quick Presets -->
+                <div class="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-800">
+                    <span class="text-xs text-slate-400 font-medium mr-1">Quick Blocks:</span>
+                    <button onclick="setQuickSlot('09:00', '12:00')" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs rounded-lg text-slate-300 transition">
+                        Morning (09:00 - 12:00)
+                    </button>
+                    <button onclick="setQuickSlot('14:00', '17:00')" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs rounded-lg text-slate-300 transition">
+                        Afternoon (14:00 - 17:00)
+                    </button>
+                    <button onclick="setQuickSlot('17:00', '20:00')" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs rounded-lg text-slate-300 transition">
+                        Evening (17:00 - 20:00)
+                    </button>
+                    <button onclick="setQuickSlot('20:00', '23:00')" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs rounded-lg text-slate-300 transition">
+                        Night (20:00 - 23:00)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Seat Status Indicators Bar (Clean, no emojis) -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                
+                <!-- Green Legend -->
+                <div class="flex items-center gap-3 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                    <span class="w-3.5 h-3.5 rounded-full bg-emerald-500 shrink-0"></span>
+                    <div>
+                        <h4 class="text-xs font-bold text-emerald-400 uppercase tracking-wide">Green: Available</h4>
+                        <p class="text-xs text-slate-300">Vacant seat ready for immediate reservation</p>
+                    </div>
+                </div>
+
+                <!-- Red Legend -->
+                <div class="flex items-center gap-3 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                    <span class="w-3.5 h-3.5 rounded-full bg-rose-500 shrink-0"></span>
+                    <div>
+                        <h4 class="text-xs font-bold text-rose-400 uppercase tracking-wide">Red: Occupied</h4>
+                        <p class="text-xs text-slate-300">Reserved and checked in by student</p>
+                    </div>
+                </div>
+
+                <!-- Yellow Legend -->
+                <div class="flex items-center gap-3 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                    <span class="w-3.5 h-3.5 rounded-full bg-amber-400 badge-pulse shrink-0"></span>
+                    <div>
+                        <h4 class="text-xs font-bold text-amber-300 uppercase tracking-wide">Yellow: Awaiting Arrival</h4>
+                        <p class="text-xs text-slate-300">Reserved with a 15-minute check-in grace period</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 20-Seat Map Grid -->
+            <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-border-all text-indigo-400 text-sm"></i>
+                        <h3 class="text-base font-semibold text-white">Center Floor Grid (20 Total Seats)</h3>
+                    </div>
+                    <span id="activeSlotBanner" class="text-xs text-indigo-300 bg-indigo-950/70 border border-indigo-800/70 px-3 py-1 rounded-lg">
+                        Loading selected window...
+                    </span>
+                </div>
+
+                <!-- Loading State -->
+                <div id="gridLoader" class="py-16 flex justify-center items-center">
+                    <div class="animate-spin rounded-full h-8 w-8 border-2 border-indigo-500 border-t-transparent"></div>
+                </div>
+
+                <!-- Seat Grid Container -->
+                <div id="seatGrid" class="hidden grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Reservation Modal (For Available Seats) -->
+    <div id="bookingModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                    <h3 class="text-base font-bold text-white">Reserve Seat <span id="modalSeatCode" class="text-indigo-400">S-01</span></h3>
+                </div>
+                <button onclick="closeModal('bookingModal')" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <div class="bg-slate-950 p-3.5 rounded-xl space-y-2 border border-slate-800 text-slate-300">
+                    <div class="flex justify-between"><span class="text-slate-500">Zone:</span> <span id="modalZone" class="font-medium text-slate-200">Quiet Zone</span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Date:</span> <span id="modalDate" class="font-medium text-slate-200">2026-10-10</span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Time Window:</span> <span id="modalTimeSlot" class="font-medium text-slate-200">14:00 - 17:00</span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Amenities:</span> <span id="modalAmenities" class="font-medium text-slate-200">Power Outlet, Window View</span></div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-300 mb-1">Student Name</label>
+                    <input type="text" id="modalStudentName" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-300 mb-1">Phone Number</label>
+                    <input type="text" id="modalStudentPhone" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+
+                <p class="text-[11px] text-slate-500">
+                    Note: A 15-minute check-in window applies once the reservation begins. Please complete check-in on arrival.
+                </p>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-2">
+                <button onclick="closeModal('bookingModal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-medium transition">
+                    Dismiss
+                </button>
+                <button onclick="confirmBooking()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold shadow-md transition">
+                    Confirm Reservation
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seat Inspection / Check-In Modal (For Occupied / Pending Seats) -->
+    <div id="seatDetailModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2">
+                    <span id="detailStatusIndicator" class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                    <h3 class="text-base font-bold text-white">Seat <span id="detailSeatCode" class="text-indigo-400">S-05</span> Status</h3>
+                </div>
+                <button onclick="closeModal('seatDetailModal')" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <div id="detailStatusBadge" class="p-3 rounded-xl border text-xs font-medium">
+                    Status Message
+                </div>
+
+                <div class="bg-slate-950 p-3.5 rounded-xl space-y-2 border border-slate-800 text-slate-300">
+                    <div class="flex justify-between"><span class="text-slate-500">Student Name:</span> <span id="detailStudentName" class="font-medium text-slate-200">-</span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Contact Number:</span> <span id="detailStudentPhone" class="font-medium text-slate-200">-</span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Reserved Window:</span> <span id="detailSlotTime" class="font-medium text-slate-200">-</span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Check-In Status:</span> <span id="detailCheckInText" class="font-medium text-slate-200">-</span></div>
+                </div>
+            </div>
+
+            <div class="space-y-2 pt-2">
+                <!-- Check-in button (visible for Yellow seats) -->
+                <button id="checkInBtn" onclick="performCheckIn()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 rounded-xl shadow-md transition flex items-center justify-center gap-2 text-xs">
+                    <i class="fa-solid fa-check"></i> Complete Student Check-In (Mark Occupied)
+                </button>
+
+                <!-- Cancellation button with strict ownership notice -->
+                <div id="cancelContainer" class="space-y-1">
+                    <button id="cancelBookingBtn" onclick="performCancelBooking()" class="w-full bg-rose-950 hover:bg-rose-900 border border-rose-800 text-rose-300 font-medium py-2 rounded-xl text-xs transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-ban"></i> Cancel Reservation
+                    </button>
+                    <p id="cancelNotice" class="text-[11px] text-slate-500 text-center"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dual Login Modal (Student Login & Admin Login) -->
+    <div id="loginModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-user-lock text-indigo-400"></i> Account Authentication
+                </h3>
+                <button onclick="closeModal('loginModal')" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Role Selector Tabs -->
+            <div class="flex rounded-xl bg-slate-950 p-1 border border-slate-800">
+                <button id="tabStudentBtn" onclick="switchLoginTab('STUDENT')" class="flex-1 py-1.5 rounded-lg text-xs font-semibold transition bg-indigo-600 text-white">
+                    Student Login
+                </button>
+                <button id="tabAdminBtn" onclick="switchLoginTab('ADMIN')" class="flex-1 py-1.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white">
+                    Administrator Login
+                </button>
+            </div>
+
+            <!-- Login Form Fields -->
+            <div class="space-y-3 text-xs">
+                <div id="loginNameGroup">
+                    <label class="block font-semibold text-slate-300 mb-1">Full Name</label>
+                    <input type="text" id="loginName" placeholder="e.g. Alex Johnson" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+
+                <div>
+                    <label id="loginIdentifierLabel" class="block font-semibold text-slate-300 mb-1">Mobile Number or Email</label>
+                    <input type="text" id="loginIdentifier" placeholder="e.g. 9876543210 or admin@studynest.com" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-300 mb-1">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+
+                <!-- Quick Pre-filled Credentials Helper -->
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-[11px] text-slate-400 space-y-1">
+                    <p class="font-semibold text-slate-300">Quick Demo Accounts:</p>
+                    <div class="flex flex-wrap gap-1.5">
+                        <button onclick="fillQuickCredentials('9876543210', 'Alex Johnson', 'pass123', 'STUDENT')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700">
+                            Alex (Student)
+                        </button>
+                        <button onclick="fillQuickCredentials('9812345678', 'Sarah Williams', 'pass123', 'STUDENT')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700">
+                            Sarah (Student)
+                        </button>
+                        <button onclick="fillQuickCredentials('admin@studynest.com', 'Center Administrator', 'admin123', 'ADMIN')" class="px-2 py-0.5 rounded bg-indigo-950 hover:bg-indigo-900 text-indigo-300 border border-indigo-800">
+                            Administrator
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-2">
+                <button onclick="submitAuthentication()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2 rounded-xl text-xs transition">
+                    Sign In
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Reservations Modal (For Logged-in Student) -->
+    <div id="myReservationsModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-calendar-check text-indigo-400"></i>
+                    <h3 class="text-base font-bold text-white">My Reservations</h3>
+                </div>
+                <button onclick="closeModal('myReservationsModal')" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div id="myReservationsList" class="max-h-80 overflow-y-auto space-y-3 pr-1 text-xs">
+                <!-- Dynamically rendered -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Console Modal (All Bookings) -->
+    <div id="adminConsoleModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-shield-halved text-amber-400"></i>
+                    <h3 class="text-base font-bold text-white">Administrator Management Console</h3>
+                </div>
+                <button onclick="closeModal('adminConsoleModal')" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <p class="text-xs text-slate-400">
+                Center administrators have full authority to inspect, check-in, or cancel any active reservation across all 20 study seats.
+            </p>
+
+            <div id="adminReservationsList" class="max-h-96 overflow-y-auto space-y-2.5 pr-1 text-xs">
+                <!-- Dynamically loaded -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Study Center Guidelines Modal -->
+    <div id="centerInfoModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-circle-info text-indigo-400"></i> Study Center Guidelines
+                </h3>
+                <button onclick="closeModal('centerInfoModal')" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3 text-xs text-slate-300">
+                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1.5">
+                    <h4 class="font-bold text-white">1. Arrival & Check-In Grace Window</h4>
+                    <p class="text-slate-400">
+                        When a seat is reserved, it appears in <strong class="text-amber-300">Yellow</strong>. Students must confirm their check-in within 15 minutes of the start time to turn their seat to <strong class="text-rose-400">Red (Occupied)</strong>.
+                    </p>
+                </div>
+
+                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1.5">
+                    <h4 class="font-bold text-white">2. Cancellation Policy</h4>
+                    <p class="text-slate-400">
+                        To protect other students, only the student who reserved the seat can cancel their booking. Other students cannot cancel your seat. Center administrators hold overriding authority.
+                    </p>
+                </div>
+
+                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1.5">
+                    <h4 class="font-bold text-white">3. Zones & Facilities</h4>
+                    <p class="text-slate-400">
+                        Seats 1 to 6 are in the Quiet Study Zone. Seats 7 to 14 are in the Central Workstation area. Seats 15 to 20 are situated by the Window Study Bay.
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-2">
+                <button onclick="closeModal('centerInfoModal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-medium transition">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="hidden fixed bottom-6 right-6 z-50 bg-slate-900 border border-slate-700 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 transition">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toastMsg" class="text-xs font-medium">Notification message</span>
+    </div>
+
+    <script>
+        // Global User State
+        let currentUser = {
+            id: 2, // Alex Johnson
+            name: "Alex Johnson",
+            phone: "9876543210",
+            email: "alex@studynest.com",
+            role: "STUDENT",
+            studentIdCard: "SN-1001"
+        };
+        let activeSelectedTabRole = "STUDENT";
+        let activeSeatData = null;
+        let selectedSeatForBooking = null;
+
+        // On Page Load
+        document.addEventListener("DOMContentLoaded", () => {
+            initDateConstraints();
+            updateSidebarUserUI();
+            loadSeatMap();
+        });
+
+        function initDateConstraints() {
+            const today = new Date();
+            const minDate = today.toISOString().split("T")[0];
+
+            const maxDateObj = new Date();
+            maxDateObj.setDate(today.getDate() + 7);
+            const maxDate = maxDateObj.toISOString().split("T")[0];
+
+            const dateInput = document.getElementById("bookingDate");
+            dateInput.min = minDate;
+            dateInput.max = maxDate;
+            dateInput.value = minDate;
+        }
+
+        function updateSidebarUserUI() {
+            document.getElementById("sidebarUserName").innerText = currentUser.name;
+            document.getElementById("sidebarUserPhone").innerText = currentUser.phone || currentUser.email;
+            document.getElementById("sidebarUserRole").innerText = currentUser.role === "ADMIN" ? "Administrator" : "Student";
+            document.getElementById("sidebarUserIdCard").innerText = currentUser.studentIdCard || (currentUser.role === "ADMIN" ? "ADMIN" : "STUDENT");
+            document.getElementById("sidebarUserAvatar").innerText = currentUser.name.charAt(0).toUpperCase();
+
+            // Toggle admin navigation visibility
+            const adminNav = document.getElementById("navAdmin");
+            if (currentUser.role === "ADMIN") {
+                adminNav.classList.remove("hidden");
+                document.getElementById("sidebarUserRole").className = "text-[11px] font-semibold tracking-wide uppercase px-2 py-0.5 rounded-full bg-amber-950 text-amber-300 border border-amber-800";
+            } else {
+                adminNav.classList.add("hidden");
+                document.getElementById("sidebarUserRole").className = "text-[11px] font-semibold tracking-wide uppercase px-2 py-0.5 rounded-full bg-indigo-950 text-indigo-300 border border-indigo-800";
+            }
+        }
+
+        function setQuickSlot(start, end) {
+            document.getElementById("startTime").value = start;
+            document.getElementById("endTime").value = end;
+            loadSeatMap();
+        }
+
+        async function loadSeatMap() {
+            const date = document.getElementById("bookingDate").value;
+            const startTime = document.getElementById("startTime").value;
+            const endTime = document.getElementById("endTime").value;
+
+            document.getElementById("activeSlotBanner").innerText = `Date: ${date} | Window: ${startTime} - ${endTime}`;
+            document.getElementById("gridLoader").classList.remove("hidden");
+            document.getElementById("seatGrid").classList.add("hidden");
+
+            try {
+                const response = await fetch(`/api/seats/map?date=${date}&startTime=${startTime}&endTime=${endTime}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    renderSeats(result.data);
+                    updateSummaryStats(result.data);
+                } else {
+                    showToast(result.message, "error");
+                }
+            } catch (err) {
+                showToast("Failed to retrieve seat status: " + err, "error");
+            } finally {
+                document.getElementById("gridLoader").classList.add("hidden");
+                document.getElementById("seatGrid").classList.remove("hidden");
+            }
+        }
+
+        function updateSummaryStats(seats) {
+            let available = 0, occupied = 0, pending = 0;
+            seats.forEach(s => {
+                if (s.status === "GREEN") available++;
+                else if (s.status === "RED") occupied++;
+                else if (s.status === "YELLOW") pending++;
+            });
+            document.getElementById("statAvailable").innerText = available;
+            document.getElementById("statOccupied").innerText = occupied;
+            document.getElementById("statPending").innerText = pending;
+        }
+
+        function renderSeats(seats) {
+            const container = document.getElementById("seatGrid");
+            container.innerHTML = "";
+
+            seats.forEach(seat => {
+                let borderStyle, badgeBg, badgeText, statusDotColor, pulseClass = "";
+
+                if (seat.status === "GREEN") {
+                    borderStyle = "border-emerald-900/60 hover:border-emerald-500 bg-slate-900/80";
+                    badgeBg = "bg-emerald-950/80 text-emerald-300 border border-emerald-800";
+                    badgeText = "Available";
+                    statusDotColor = "bg-emerald-500";
+                } else if (seat.status === "RED") {
+                    borderStyle = "border-rose-900/60 hover:border-rose-600 bg-slate-900/90";
+                    badgeBg = "bg-rose-950/80 text-rose-300 border border-rose-800";
+                    badgeText = "Occupied";
+                    statusDotColor = "bg-rose-500";
+                } else { // YELLOW
+                    borderStyle = "border-amber-900/70 hover:border-amber-500 bg-slate-900/90";
+                    badgeBg = "bg-amber-950/80 text-amber-300 border border-amber-800";
+                    badgeText = "Awaiting Check-In";
+                    statusDotColor = "bg-amber-400";
+                    pulseClass = "badge-pulse";
+                }
+
+                const cardHtml = `
+                    <div onclick='handleSeatClick(${JSON.stringify(seat).replace(/'/g, "&apos;")})' 
+                         class="seat-card cursor-pointer rounded-2xl border ${borderStyle} p-4 shadow-sm flex flex-col justify-between relative overflow-hidden ${pulseClass}">
+                        
+                        <!-- Top Seat Header -->
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[10px] font-bold text-slate-500 tracking-wider">SEAT</span>
+                                <h4 class="text-lg font-bold text-white">${seat.seatCode}</h4>
+                            </div>
+                            <span class="inline-flex items-center gap-1.5 text-[10px] px-2.5 py-1 rounded-full font-semibold ${badgeBg}">
+                                <span class="w-1.5 h-1.5 rounded-full ${statusDotColor}"></span>
+                                ${badgeText}
+                            </span>
+                        </div>
+
+                        <!-- Zone & Amenities -->
+                        <div class="my-3 space-y-1">
+                            <p class="text-xs text-slate-300 font-medium">
+                                ${seat.zone}
+                            </p>
+                            <div class="flex items-center gap-2 text-[11px] text-slate-400">
+                                ${seat.hasPowerSocket ? '<span class="flex items-center gap-1"><i class="fa-solid fa-bolt text-amber-400 text-[10px]"></i> Power</span>' : ''}
+                                ${seat.windowSide ? '<span class="flex items-center gap-1"><i class="fa-solid fa-window-maximize text-indigo-400 text-[10px]"></i> Window</span>' : ''}
+                            </div>
+                        </div>
+
+                        <!-- Card Footer -->
+                        <div class="pt-2 border-t border-slate-800 flex justify-between items-center text-[11px] text-slate-400">
+                            <span class="truncate max-w-[110px]">
+                                ${seat.status === 'GREEN' ? 'Click to reserve' : (seat.bookedByStudentName || 'Reserved')}
+                            </span>
+                            <span class="text-indigo-400 font-medium hover:underline flex items-center gap-1">
+                                Details <i class="fa-solid fa-angle-right text-[9px]"></i>
+                            </span>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML("beforeend", cardHtml);
+            });
+        }
+
+        function handleSeatClick(seat) {
+            activeSeatData = seat;
+
+            if (seat.status === "GREEN") {
+                // Open Reservation Modal
+                selectedSeatForBooking = seat;
+                document.getElementById("modalSeatCode").innerText = seat.seatCode;
+                document.getElementById("modalZone").innerText = seat.zone;
+                document.getElementById("modalDate").innerText = document.getElementById("bookingDate").value;
+                document.getElementById("modalTimeSlot").innerText = `${document.getElementById("startTime").value} - ${document.getElementById("endTime").value}`;
+                
+                let amenities = [];
+                if (seat.hasPowerSocket) amenities.push("Dedicated Power Outlet");
+                if (seat.windowSide) amenities.push("Window View");
+                document.getElementById("modalAmenities").innerText = amenities.length ? amenities.join(", ") : "Standard Desk";
+
+                document.getElementById("modalStudentName").value = currentUser.name;
+                document.getElementById("modalStudentPhone").value = currentUser.phone;
+
+                document.getElementById("bookingModal").classList.remove("hidden");
+            } else {
+                // Open Seat Details / Check-In Modal for Occupied / Pending seats
+                document.getElementById("detailSeatCode").innerText = seat.seatCode;
+                document.getElementById("detailStudentName").innerText = seat.bookedByStudentName || "Student";
+                document.getElementById("detailStudentPhone").innerText = seat.bookedByStudentPhone || "Protected";
+                document.getElementById("detailSlotTime").innerText = `${seat.startTime || ''} - ${seat.endTime || ''}`;
+
+                const indicator = document.getElementById("detailStatusIndicator");
+                const badge = document.getElementById("detailStatusBadge");
+                const checkInBtn = document.getElementById("checkInBtn");
+                const cancelBtn = document.getElementById("cancelBookingBtn");
+                const cancelNotice = document.getElementById("cancelNotice");
+
+                if (seat.status === "YELLOW") {
+                    indicator.className = "w-2.5 h-2.5 rounded-full bg-amber-400";
+                    badge.className = "p-3 rounded-xl border border-amber-800 bg-amber-950/60 text-amber-300 text-xs";
+                    badge.innerText = "Reserved - Awaiting Student Arrival. 15-minute grace window active.";
+                    document.getElementById("detailCheckInText").innerText = "Pending Arrival";
+                    checkInBtn.classList.remove("hidden");
+                } else {
+                    indicator.className = "w-2.5 h-2.5 rounded-full bg-rose-500";
+                    badge.className = "p-3 rounded-xl border border-rose-800 bg-rose-950/60 text-rose-300 text-xs";
+                    badge.innerText = "Occupied - Student has checked in and is actively studying.";
+                    document.getElementById("detailCheckInText").innerText = "Confirmed & Present";
+                    checkInBtn.classList.add("hidden");
+                }
+
+                // SECURITY CHECK: Only the student who reserved or an Administrator can cancel!
+                const isOwner = currentUser.id === seat.bookedByStudentId;
+                const isAdmin = currentUser.role === "ADMIN";
+
+                if (isOwner || isAdmin) {
+                    cancelBtn.disabled = false;
+                    cancelBtn.classList.remove("opacity-40", "cursor-not-allowed");
+                    cancelNotice.innerText = isAdmin ? "Administrator authority active: you can cancel any reservation." : "You reserved this seat: you are authorized to cancel.";
+                    cancelNotice.className = "text-[11px] text-slate-400 text-center";
+                } else {
+                    cancelBtn.disabled = true;
+                    cancelBtn.classList.add("opacity-40", "cursor-not-allowed");
+                    cancelNotice.innerText = "Restricted: You cannot cancel a seat reserved by another student.";
+                    cancelNotice.className = "text-[11px] text-rose-400 text-center";
+                }
+
+                document.getElementById("seatDetailModal").classList.remove("hidden");
+            }
+        }
+
+        async function confirmBooking() {
+            if (!selectedSeatForBooking) return;
+
+            const name = document.getElementById("modalStudentName").value.trim();
+            const phone = document.getElementById("modalStudentPhone").value.trim();
+            const date = document.getElementById("bookingDate").value;
+            const startTime = document.getElementById("startTime").value;
+            const endTime = document.getElementById("endTime").value;
+
+            if (!name || !phone) {
+                showToast("Please provide your name and phone number.", "error");
+                return;
+            }
+
+            const payload = {
+                seatNumber: selectedSeatForBooking.seatNumber,
+                bookingDate: date,
+                startTime: startTime,
+                endTime: endTime,
+                studentId: currentUser.role === "STUDENT" ? currentUser.id : null,
+                studentName: name,
+                studentPhone: phone
+            };
+
+            try {
+                const response = await fetch("/api/bookings", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast(`Seat ${selectedSeatForBooking.seatCode} reserved successfully.`, "success");
+                    closeModal("bookingModal");
+                    loadSeatMap();
+                } else {
+                    showToast(result.message, "error");
+                }
+            } catch (err) {
+                showToast("Failed to complete reservation: " + err, "error");
+            }
+        }
+
+        async function performCheckIn() {
+            if (!activeSeatData || !activeSeatData.bookingId) return;
+
+            try {
+                const response = await fetch(`/api/bookings/${activeSeatData.bookingId}/check-in?userId=${currentUser.id}&role=${currentUser.role}`, {
+                    method: "POST"
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast("Check-in confirmed. Seat status updated to Occupied.", "success");
+                    closeModal("seatDetailModal");
+                    loadSeatMap();
+                } else {
+                    showToast(result.message, "error");
+                }
+            } catch (err) {
+                showToast("Check-in request failed: " + err, "error");
+            }
+        }
+
+        async function performCancelBooking() {
+            if (!activeSeatData || !activeSeatData.bookingId) return;
+
+            if (!confirm("Are you sure you wish to cancel this reservation?")) return;
+
+            try {
+                const response = await fetch(`/api/bookings/${activeSeatData.bookingId}/cancel?userId=${currentUser.id}&role=${currentUser.role}`, {
+                    method: "POST"
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast("Reservation successfully cancelled.", "success");
+                    closeModal("seatDetailModal");
+                    loadSeatMap();
+                } else {
+                    showToast(result.message, "error");
+                }
+            } catch (err) {
+                showToast("Cancellation request failed: " + err, "error");
+            }
+        }
+
+        // Authentication Modal Handling
+        function openLoginModal() {
+            document.getElementById("loginModal").classList.remove("hidden");
+        }
+
+        function switchLoginTab(role) {
+            activeSelectedTabRole = role;
+            const studentBtn = document.getElementById("tabStudentBtn");
+            const adminBtn = document.getElementById("tabAdminBtn");
+            const nameGroup = document.getElementById("loginNameGroup");
+            const identifierLabel = document.getElementById("loginIdentifierLabel");
+
+            if (role === "STUDENT") {
+                studentBtn.className = "flex-1 py-1.5 rounded-lg text-xs font-semibold transition bg-indigo-600 text-white";
+                adminBtn.className = "flex-1 py-1.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white";
+                nameGroup.classList.remove("hidden");
+                identifierLabel.innerText = "Mobile Number or Email";
+            } else {
+                adminBtn.className = "flex-1 py-1.5 rounded-lg text-xs font-semibold transition bg-amber-600 text-white";
+                studentBtn.className = "flex-1 py-1.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white";
+                nameGroup.classList.add("hidden");
+                identifierLabel.innerText = "Administrator Username / Email";
+            }
+        }
+
+        function fillQuickCredentials(identifier, name, password, role) {
+            switchLoginTab(role);
+            document.getElementById("loginIdentifier").value = identifier;
+            document.getElementById("loginName").value = name;
+            document.getElementById("loginPassword").value = password;
+        }
+
+        async function submitAuthentication() {
+            const identifier = document.getElementById("loginIdentifier").value.trim();
+            const password = document.getElementById("loginPassword").value.trim();
+            const name = document.getElementById("loginName").value.trim();
+
+            if (!identifier) {
+                showToast("Please enter your identifier (phone or email).", "error");
+                return;
+            }
+
+            const payload = {
+                identifier: identifier,
+                password: password || "password123",
+                role: activeSelectedTabRole,
+                name: name
+            };
+
+            try {
+                const response = await fetch("/api/students/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    currentUser = result.data;
+                    updateSidebarUserUI();
+                    showToast(`Signed in successfully as ${currentUser.name} (${currentUser.role}).`, "success");
+                    closeModal("loginModal");
+                    loadSeatMap();
+                } else {
+                    showToast(result.message, "error");
+                }
+            } catch (err) {
+                showToast("Authentication failed: " + err, "error");
+            }
+        }
+
+        // My Reservations Modal
+        async function openMyReservationsModal() {
+            document.getElementById("myReservationsModal").classList.remove("hidden");
+            const container = document.getElementById("myReservationsList");
+            container.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Retrieving your reservations...</p>`;
+
+            try {
+                const response = await fetch(`/api/bookings/student/${currentUser.id}`);
+                const result = await response.json();
+
+                if (result.success && result.data.length > 0) {
+                    container.innerHTML = "";
+                    result.data.forEach(b => {
+                        let badgeHtml;
+                        if (b.status === 'CANCELLED') {
+                            badgeHtml = `<span class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">Cancelled</span>`;
+                        } else if (b.checkedIn) {
+                            badgeHtml = `<span class="text-[10px] px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-800 font-semibold">Occupied</span>`;
+                        } else {
+                            badgeHtml = `<span class="text-[10px] px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-800 font-semibold">Awaiting Arrival</span>`;
+                        }
+
+                        const card = `
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5 flex justify-between items-center">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <h4 class="font-bold text-white text-sm">Seat ${b.seat.seatCode}</h4>
+                                        ${badgeHtml}
+                                    </div>
+                                    <p class="text-slate-400 text-xs mt-1">Date: ${b.bookingDate} | Time: ${b.startTime} - ${b.endTime}</p>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    ${(!b.checkedIn && b.status !== 'CANCELLED') ? `
+                                        <button onclick="quickCheckInFromList(${b.id})" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-lg transition">
+                                            Check-In
+                                        </button>
+                                    ` : ''}
+                                    ${(b.status !== 'CANCELLED') ? `
+                                        <button onclick="quickCancelFromList(${b.id})" class="px-2.5 py-1 bg-rose-950 hover:bg-rose-900 border border-rose-800 text-rose-300 font-medium text-xs rounded-lg transition">
+                                            Cancel
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `;
+                        container.insertAdjacentHTML("beforeend", card);
+                    });
+                } else {
+                    container.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">No reservations found for ${currentUser.name}.</p>`;
+                }
+            } catch (err) {
+                container.innerHTML = `<p class="text-xs text-rose-400 text-center py-6">Error loading reservations.</p>`;
+            }
+        }
+
+        async function quickCheckInFromList(bookingId) {
+            try {
+                const response = await fetch(`/api/bookings/${bookingId}/check-in?userId=${currentUser.id}&role=${currentUser.role}`, { method: "POST" });
+                const result = await response.json();
+                if (result.success) {
+                    showToast("Check-in confirmed.", "success");
+                    openMyReservationsModal();
+                    loadSeatMap();
+                } else {
+                    showToast(result.message, "error");
+                }
+            } catch (err) {
+                showToast("Check-in request failed.", "error");
+            }
+        }
+
+        async function quickCancelFromList(bookingId) {
+            if (!confirm("Are you sure you want to cancel this reservation?")) return;
+
+            try {
+                const response = await fetch(`/api/bookings/${bookingId}/cancel?userId=${currentUser.id}&role=${currentUser.role}`, { method: "POST" });
+                const result = await response.json();
+                if (result.success) {
+                    showToast("Reservation cancelled successfully.", "success");
+                    openMyReservationsModal();
+                    loadSeatMap();
+                } else {
+                    showToast(result.message, "error");
+                }
+            } catch (err) {
+                showToast("Cancellation request failed.", "error");
+            }
+        }
+
+        // Admin Console Modal
+        async function openAdminConsoleModal() {
+            if (currentUser.role !== "ADMIN") {
+                showToast("Access restricted to administrators.", "error");
+                return;
+            }
+
+            document.getElementById("adminConsoleModal").classList.remove("hidden");
+            const container = document.getElementById("adminReservationsList");
+            container.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Loading all center reservations...</p>`;
+
+            try {
+                const response = await fetch("/api/bookings/admin/all");
+                const result = await response.json();
+
+                if (result.success && result.data.length > 0) {
+                    container.innerHTML = "";
+                    result.data.forEach(b => {
+                        let statusColor = b.checkedIn ? "text-rose-400" : (b.status === 'CANCELLED' ? "text-slate-500" : "text-amber-400");
+                        let statusText = b.checkedIn ? "Occupied" : (b.status === 'CANCELLED' ? "Cancelled" : "Pending Arrival");
+
+                        const row = `
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 flex justify-between items-center">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold text-white">Seat ${b.seat.seatCode}</span>
+                                        <span class="text-[11px] font-medium ${statusColor}">(${statusText})</span>
+                                        <span class="text-slate-400">| Student: <strong class="text-slate-200">${b.student.name}</strong> (${b.student.phone})</span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-500 mt-0.5">Date: ${b.bookingDate} | Time: ${b.startTime} - ${b.endTime}</p>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    ${(!b.checkedIn && b.status !== 'CANCELLED') ? `
+                                        <button onclick="adminCheckIn(${b.id})" class="px-2 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[11px] rounded transition">
+                                            Force Check-In
+                                        </button>
+                                    ` : ''}
+                                    ${(b.status !== 'CANCELLED') ? `
+                                        <button onclick="adminCancel(${b.id})" class="px-2 py-1 bg-rose-950 hover:bg-rose-900 border border-rose-800 text-rose-300 font-medium text-[11px] rounded transition">
+                                            Admin Cancel
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `;
+                        container.insertAdjacentHTML("beforeend", row);
+                    });
+                } else {
+                    container.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">No reservations recorded.</p>`;
+                }
+            } catch (err) {
+                container.innerHTML = `<p class="text-xs text-rose-400 text-center py-6">Error loading reservations.</p>`;
+            }
+        }
+
+        async function adminCheckIn(bookingId) {
+            try {
+                const response = await fetch(`/api/bookings/${bookingId}/check-in?userId=${currentUser.id}&role=ADMIN`, { method: "POST" });
+                const result = await response.json();
+                if (result.success) {
+                    showToast("Administrator check-in applied.", "success");
+                    openAdminConsoleModal();
+                    loadSeatMap();
+                } else {
+                    showToast(result.message, "error");
+                }
+            } catch (err) {
+                showToast("Action failed.", "error");
+            }
+        }
+
+        async function adminCancel(bookingId) {
+            if (!confirm("Confirm administrator override cancellation?")) return;
+
+            try {
+                const response = await fetch(`/api/bookings/${bookingId}/cancel?userId=${currentUser.id}&role=ADMIN`, { method: "POST" });
+                const result = await response.json();
+                if (result.success) {
+                    showToast("Reservation cancelled by Administrator.", "success");
+                    openAdminConsoleModal();
+                    loadSeatMap();
+                } else {
+                    showToast(result.message, "error");
+                }
+            } catch (err) {
+                showToast("Action failed.", "error");
+            }
+        }
+
+        function openCenterInfoModal() {
+            document.getElementById("centerInfoModal").classList.remove("hidden");
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add("hidden");
+        }
+
+        function switchView(view) {
+            loadSeatMap();
+        }
+
+        function showToast(msg, type = "success") {
+            const toast = document.getElementById("toast");
+            const toastMsg = document.getElementById("toastMsg");
+            const toastIcon = document.getElementById("toastIcon");
+
+            toastMsg.innerText = msg;
+            if (type === "success") {
+                toastIcon.className = "fa-solid fa-circle-check text-emerald-400";
+                toast.className = "fixed bottom-6 right-6 z-50 bg-slate-900 border border-emerald-500/60 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 transition";
+            } else {
+                toastIcon.className = "fa-solid fa-circle-exclamation text-rose-400";
+                toast.className = "fixed bottom-6 right-6 z-50 bg-slate-900 border border-rose-500/60 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 transition";
+            }
+
+            toast.classList.remove("hidden");
+            setTimeout(() => {
+                toast.classList.add("hidden");
+            }, 4000);
+        }
+    </script>
+</body>
+</html>
